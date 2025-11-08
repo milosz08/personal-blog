@@ -1,0 +1,55 @@
+name: CI build (prebuilt) and deploy to Vercel
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+      - ".github/workflows/vercel.yml"
+      - "public/**"
+      - "src/**"
+      - "next.config.ts"
+      - "package.json"
+      - "postcss.config.mjs"
+      - "tsconfig.json"
+      - "yarn.lock"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Next build
+        run: yarn run build
+        env:
+          NEXT_PUBLIC_SELF_REFER: ${{ vars.SELF_REFER }}
+          NEXT_PUBLIC_GISCUS_REPO_ID: ${{ secrets.GISCUS_REPO_ID }}
+          NEXT_PUBLIC_GISCUS_CATEGORY_ID: ${{ secrets.GISCUS_CATEGORY_ID }}
+          NEXT_PUBLIC_ANALYTICS_WEBPAGE_ID: ${{ secrets.ANALYTICS_WEBPAGE_ID }}
+          NEXT_PUBLIC_GTM_ID: ${{ secrets.GTM_ID }}
+
+      - name: Run Vercel build to create .vercel/output
+        run: yarn run vercel:build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: yarn run vercel:deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
