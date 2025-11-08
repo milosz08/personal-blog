@@ -50,6 +50,7 @@ jobs:
           NEXT_PUBLIC_SELF_REFER: ${{ vars.SELF_REFER }}
           NEXT_PUBLIC_GISCUS_REPO_ID: ${{ secrets.GISCUS_REPO_ID }}
           NEXT_PUBLIC_GISCUS_CATEGORY_ID: ${{ secrets.GISCUS_CATEGORY_ID }}
+          NEXT_PUBLIC_ANALYTICS_REFERER: ${{ secrets.ANALYTICS_REFERER }}
           NEXT_PUBLIC_ANALYTICS_WEBPAGE_ID: ${{ secrets.ANALYTICS_WEBPAGE_ID }}
           NEXT_PUBLIC_GTM_ID: ${{ secrets.GTM_ID }}
 
