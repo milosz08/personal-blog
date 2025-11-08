@@ -41,20 +41,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Next build
-        run: yarn run build
+      - name: Pull Vercel environment information
+        run: yarn run vercel:pull
+
+      - name: Run Vercel build to create .vercel/output
+        run: yarn run vercel:build
         env:
           NEXT_PUBLIC_SELF_REFER: ${{ vars.SELF_REFER }}
           NEXT_PUBLIC_GISCUS_REPO_ID: ${{ secrets.GISCUS_REPO_ID }}
           NEXT_PUBLIC_GISCUS_CATEGORY_ID: ${{ secrets.GISCUS_CATEGORY_ID }}
           NEXT_PUBLIC_ANALYTICS_WEBPAGE_ID: ${{ secrets.ANALYTICS_WEBPAGE_ID }}
           NEXT_PUBLIC_GTM_ID: ${{ secrets.GTM_ID }}
-
-      - name: Pull Vercel environment information
-        run: yarn run vercel:pull
-
-      - name: Run Vercel build to create .vercel/output
-        run: yarn run vercel:build
 
       - name: Deploy to Vercel
         run: yarn run vercel:deploy
