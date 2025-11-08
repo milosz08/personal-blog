@@ -23,4 +23,5 @@ message: [miloszgilga@gmail.com](mailto:miloszgilga@gmail.com).
 
 ## License
 
-This project is licensed under the Apache 2.0 License.
+This project (source code) is licensed under the Apache 2.0 License.
+This project (`.mdx` files and all content inside `content` directory) is licensed under Creative Commons BY-NC-SA 4.0.
