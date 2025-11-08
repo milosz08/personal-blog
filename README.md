@@ -1,7 +1,7 @@
 # Personal blog
 
 Source code of my personal blog page, hosted on [blog.miloszgilga.pl](https://blog.miloszgilga.pl). Created using
-Next.js in SSG mode, Nextra and KaTeX. Hosted on Vercel PaaS.
+Next.js in hybrid mode (SSR/SSG), Nextra and KaTeX. Hosted on Vercel PaaS.
 
 ## Table of content
 
@@ -11,7 +11,7 @@ Next.js in SSG mode, Nextra and KaTeX. Hosted on Vercel PaaS.
 
 ## Tech stack
 
-* Next.js SSG,
+* Next.js SSR/SSG,
 * Nextra,
 * KaTeX (LaTeX for web),
 * PaaS provided by Vercel.
