@@ -1,0 +1,12 @@
+.idea
+.next
+_pagefind
+build
+coverage
+node_modules
+out
+
+.env*
+.vercel
+*.tsbuildinfo
+next-env.d.ts

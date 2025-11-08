@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+h1 {
+  font-weight: bold;
+}
+
+.x\:prose {
+  max-width: 926px;
+}
+
+article div div.x\:flex.x\:flex-wrap.x\:items-center.x\:gap-1 {
+  margin-bottom: 10px;
+}
