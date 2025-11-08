@@ -9,6 +9,8 @@ import { useMDXComponents as getMDXComponents } from '@/mdx-components';
 import { buildMetadata } from '@/utils/metadata';
 
 export const generateStaticParams = generateStaticParamsFor('mdxPath');
+export const dynamic = 'force-static';
+export const revalidate = false;
 
 type Props = {
   params: Promise<{

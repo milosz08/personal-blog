@@ -12,6 +12,9 @@ type Tags = {
 
 const metadata = buildMetadata();
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 export async function generateMetadata(): Promise<Metadata> {
   return metadata;
 }

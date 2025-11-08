@@ -13,6 +13,9 @@ type Props = {
   params: Promise<Tag>;
 };
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const encodedTag = decodeURIComponent(params.tag);

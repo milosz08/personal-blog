@@ -1,5 +1,7 @@
 import { getPosts } from '@/utils/get-posts';
 
+export const dynamic = 'force-dynamic';
+
 const CONFIG = {
   title: 'Miłosz Gilga - blog',
   siteUrl: 'https://blog.miloszgilga.pl',
