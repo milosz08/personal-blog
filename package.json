@@ -8,8 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
-    "vercel:build": "npx vercel build --token $VERCEL_TOKEN --project $VERCEL_PROJECT_ID --org $VERCEL_ORG_ID",
-    "vercel:deploy": "npx vercel deploy --prebuilt --token $VERCEL_TOKEN --project $VERCEL_PROJECT_ID --org $VERCEL_ORG_ID --prod --confirm"
+    "vercel:pull": "npx vercel pull --yes --environment=production --token $VERCEL_TOKEN",
+    "vercel:build": "npx vercel build --prod --token $VERCEL_TOKEN",
+    "vercel:deploy": "npx vercel deploy --prebuilt --prod --token $VERCEL_TOKEN"
   },
   "dependencies": {
     "@giscus/react": "^3.1.0",
