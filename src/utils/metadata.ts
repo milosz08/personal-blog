@@ -9,7 +9,7 @@ type Props = {
 };
 
 const selfRefer = process.env.NEXT_PUBLIC_SELF_REFER;
-const images = [`${selfRefer}/og-banner.jpg`];
+const images = [`${selfRefer}/og-banner.png`];
 
 const buildMetadata = ({
   title,
