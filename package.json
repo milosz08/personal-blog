@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
-    "vercel:build": "npx vercel build --token $VERCEL_TOKEN",
+    "vercel:build": "npx vercel build --token $VERCEL_TOKEN --project $VERCEL_PROJECT_ID --org $VERCEL_ORG_ID",
     "vercel:deploy": "npx vercel deploy --prebuilt --token $VERCEL_TOKEN --project $VERCEL_PROJECT_ID --org $VERCEL_ORG_ID --prod --confirm"
   },
   "dependencies": {
