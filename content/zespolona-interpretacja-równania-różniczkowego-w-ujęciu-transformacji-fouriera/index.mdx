@@ -1,0 +1,237 @@
+---
+title: Zespolona interpretacja równania różniczkowego w ujęciu transformacji Fouriera
+date: 2025-12-15
+description: |
+  O tym, jak wzór Eulera zamienia równania różniczkowe na prostą impedancję elementu reaktancyjnego oraz dlaczego splot
+  w dziedzinie czasu to proste mnożenie w analizie Fouriera.
+tags: [matematyka, dsp, esp32]
+---
+
+Mój poprzedni wpis poświęcony był twardej inżynierii oprogramowania. W tym wpisie chciałbym wrócić nieco do korzeni i
+początków mojej studenckiej drogi, czyli do teorii obwodów, oraz pokazać, w jaki sposób wiąże się ona z dosyć
+zaawansowanymi tematami analizy Fouriera, której dowody przedstawione w tym wpisie wykorzystałem w niedawno obronionej
+przeze mnie pracy magisterskiej, poświęconej nadpróbkowanej transformacji falkowej.
+
+Każdy, kto uczył się teorii obwodów, pamięta (albo nie pamięta) moment przejścia z równania różniczkowego dla stanów
+nieustalonych do metody symbolicznej opartej na liczbach zespolonych (słynne $j\omega$). W tym (możliwie, że dość
+przydługawym) wpisie postaram się krok po kroku wytłumaczyć (opartego o wzór Eulera) moment tego przejścia oraz w jaki
+sposób przejście to wiąże się z teorią splotu analizy Fouriera.
+
+Pod koniec przedstawie *namacalne* wyniki wcześniej przedstawionych dywagacji teoretycznych z użyciem prostego
+generatora sygnałów opartego o ESP32 i analizy widmowej.
+
+Tworzę ten wpis z nadzieją, że pomoże on, choć w minimalnym stopniu osobom zaczynającym swoją przygodę na studiach
+inżynierskich zrozumieć nieco tajniki teorii obwodów, które na pierwszy rzut oka może wydać się skomplikowana. Zakładam
+że czytelnik posiada podstawową wiedzę z równań różniczkowych 1 rzędu i liczb zespolonych.
+
+## Świat rzeczywisty (równanie różniczkowe) a świat inżynierski (liczby zespolone) w modelowaniu układu dynamicznego L
+
+Najlepszym sposobem, aby przedstawić zależność między różniczką a opisem z wykorzystaniem liczb zespolonych, jest
+element reaktancyjny dla prądu przemiennego. Weźmy więc na warsztat cewkę (element L). Jej opis matematyczny to
+różniczkowanie prądu (a więc opis jak szybko zmienia się prąd). Dla funkcji czasu równaniem opisującym tą zależność
+byłoby:
+
+$$
+u(t) = L \frac{di(t)}{dt}
+$$
+
+gdzie $u(t)$ oraz $i(t)$ to odpowiednio funkcje napięcia i prądu, zmieniające się w czasie $t$. Potraktujmy ten układ
+jako model układu dynamicznego. Jeśli wymusimy prąd sinusoidalny (a więc założony z początku prąd przemienny), dla
+którego $i(t)=\sin(\omega t)$, gdzie $\omega=2\pi f$, to zgodnie z regułami liczenia pochodnych otrzymamy:
+
+$$
+u(t) = \omega L \cos(\omega t)
+$$
+
+Mamy niby wynik, ale jest on w cosinusie a prąd chcemy mierzyć w sinusie. Żeby porównać te dwa sygnały (i tym samym
+zobaczyć przesunięcie fazy) trzeba zmienić cosinus z powrotem na sinus, z użyciem tożsamości trygonometrycznej:
+
+$$
+\cos(x) = \sin\left(x + \frac{\pi}{2}\right)
+$$
+
+gdzie finalnie podstawiając otrzymamy:
+
+$$
+u(t) = \omega L \sin\left(\omega t + \frac{\pi}{2}\right)
+$$
+
+Wygląda prosto, ale jest to prosty układ, posiadający jedynie jeden element reaktancyjny. Dla układu składającego się z
+wielu elementów pasywnych (rezystor, cewka, kondensator) sumowanie funkcji sinus i cosinus w dziedzinie czasu to dosyć
+skomplikowana i żmudna praca.
+
+### Przejście do świata liczb zespolonych
+
+Rozwiążmy teraz ten sam układ, ale z wykorzystaniem wzoru Eulera, a więc: $e^{j\phi} = \cos(\phi) + j\sin(\phi)$,
+gdzie $\phi$ to zadany kąt. Jeśli za kąt $\phi$ podstawimy kąt zmieniający się w czasie (a więc $\phi = \omega t$)
+otrzymamy wówczas:
+
+$$
+e^{j\omega t} = \cos(\omega t) + j\sin(\omega t)
+$$
+
+gdzie samo $e^{j\omega t}$ możemy interpretować jako wektor o długości 1, który kręci się w kółko na płaszczyźnie
+zespolonej z prędkością $\omega$. Reprezentację graficzną funkcji $e^{j\omega t}$ przedstawiono poniżej:
+
+![euler](./img/euler.png)
+
+Zacznijmy wywód od części rzeczywistej, a więc funkcji: $i_{\mathfrak{Re}}(t)=\cos(\omega t)$. Wprowadźmy teraz sygnał
+pomocniczy (a więc urojony) $i_{\mathfrak{Im}}=j\sin(\omega t)$. W ostatecznym rozrachunku, podstawiając, otrzymamy nowy
+sygnał $i(t)$ który jest bezpośrednią reprezentacją wzoru Eulera:
+
+$$
+i(t) = \cos(\omega t) + j\sin(\omega t) = e^{j\omega t}
+$$
+
+Dociekliwi mogą zauważyć, że pierwotna funkcja $i(t)$ w przestrzeni liczb rzeczywistych posiadała w swojej podstawie
+sinus, a nie cosinus. Jest to jednak zależność wynikająca stricte z funkcji $e^{j \omega}$ oraz geometrii płaszczyzny
+liczb zespolonych zakładająca odgórnie, że podstawą części rzeczywistej liczby zespolonej jest cosinus a liczby urojonej
+sinus. W naszym przypadku to jednak nie gra roli, ponieważ korzystamy jedynie z jednej części liczby zespolonej (w tym
+przypadku urojonej).
+
+Zauważmy, że prąd $i(t)$ to tak naprawdę funkcja $e^{j\omega t}$. Cała idea tego podstawienia polega na wykorzystaniu
+funkcji Eulera przy liczeniu pochodnej. Jako że pochodna z funkcji $e^x$ to po prostu ta funkcja, upraszcza to
+drastycznie obliczenia:
+
+$$
+\frac{d i(t)}{dt} = \frac{d}{dt}\left(e^{j\omega t}\right) = j\omega e^{j\omega t}
+$$
+
+gdzie całość ostatecznie sprowadza się do prostego mnożenia (zgodnie z prawem Ohma):
+
+$$
+u(t) = i(t) j\omega L
+$$
+
+co finalnie daje tę *mistyczną* wartość impedancji cewki oznaczanej w literaturze często właśnie jako $Z_L = j\omega L$.
+
+Należy mieć na uwadze, że powyższy trik działa jedynie dla systemów liniowych (a więc takich, które nie mieszają części
+rzeczywistej z urojoną), czyli jeśli $A' = X$ oraz $(jB)' = Y$ to:
+
+$$
+(A + jB)' \Leftrightarrow (X + jY)
+$$
+
+W systemach nieliniowych (np. w układach chaotycznych, opisanych przeze mnie
+[w tym wpisie](/szyfrowanie-obrazów-z-wykorzystaniem-chaotycznego-atraktora-lorenza)) sytuacja się komplikuje, ale to
+temat wykraczający poza obszar tematyczny wyżej przedstawianego wywodu.
+
+### Przejście na liczby rzeczywiste jako dowód tożsamości
+
+Wróćmy natomiast jeszcze do wzoru $u(t) = \omega L \sin\left(\omega t + \frac{\pi}{2}\right)$. Na pierwszy rzut oka
+wynik uzyskany metodą klasyczną oraz metodą symboliczną (mnożenie przez $j\omega$) mogą wydawać się różnymi opisami tego
+samego zjawiska. Mimo różnic w zapicie, oba te wyniki są matematycznie tożsame, a mnożenie przez $j$ jest bezpośrednim
+odpowiednikiem przesunięcia fazy o kąt $\frac{\pi}{2}$. Kluczem do zrozumienia tego przekształcenia jest zależność:
+
+$$
+j = e^{j\frac{\pi}{2}}
+$$
+
+która po podstawieniu do $u(t) = i(t) j\omega L$, dla którego $i(t) = e^{j\omega t}$ da w rezultacie:
+
+$$
+u(t) = \left(e^{j\frac{\pi}{2}}\omega L\right) e^{j\omega t}
+$$
+
+Korzystając z własności potęgowania ($e^a e^b = e^{a+b}$), można pogrupować wyrazy zależne od wykładnika:
+
+$$
+u(t) = (\omega L) e^{j\left(\omega t + \frac{\pi}{2}\right)}
+$$
+
+gdzie otrzymane wyrażenie zespolone opisuje wirujący wektor. Aby odzyskać przebieg czasowy sygnału rzeczywistego,
+zgodnie z przyjętą wcześniej konwencją, trzeba wyciągnąć część urojoną $\mathfrak{Im}$, a ponieważ
+$\mathfrak{Im}\{e^{j\phi}\} = \sin(\phi)$, to wynikowo jest to po prostu sinus:
+
+$$
+u_{\mathfrak{Re}}(t) = \mathfrak{Im} \left\{ (\omega L) e^{j\left(\omega t + \frac{\pi}{2}\right)} \right\}
+= \omega L \sin\left(\omega t + \frac{\pi}{2}\right)
+$$
+
+co dowodzi, że zarówno $u(t)$ uzyskane w wyniku klasycznej operacji różniczkowania w dziedzinie czasu, oraz część
+rzeczywista metody symbolicznej są sobie równe.
+
+## Upraszczanie splotu z wykorzystaniem liczb zespolonych i transformacji Fouriera
+
+Poprzednie kroki to był jedynie wstęp do zrozumienia, jak wzór Eulera pozwala uniknąć bezpośredniego różniczkowania.
+Teraz chciałbym to przenieść w świat transformacji Fouriera i jednego z jej twierdzeń, a mianowicie twierdzenia o
+splocie, szeroko wykorzystywanym w DSP i analizie sygnałów. Większość kursów (w tym na moich studiach) podaje go jako
+*prawdę objawioną* do przysłowiowego *wykucia na pamięć*. Ja postaram się pokazać krok po kroku, w jaki sposób
+*koszmar całkowy* dziedziny czasu zamienia się w proste mnożenie w dziedzinie częstotliwości.
+
+Zacznijmy zatem od przypomnienia sobie definicji splotu. Wyobraźmy sobie, że przepuszczamy sygnał $x(t)$ przez filtr o
+odpowiedzi impulsowej $h(t)$. W dziedzinie czasu wynikowy sygnał $y(t)$ jest splotem (konwolucją) tych dwóch funkcji.
+Matematycznie jest to po prostu całka:
+
+$$
+y(t) = x(t) * h(t) = \int_{-\infty}^{\infty} x(\tau) h(t - \tau) d\tau
+$$
+
+w której jedna funkcja jest przesuwana względem drugiej. Obliczanie tego analitycznie dla skomplikowanych sygnałów jest
+katorgą (nie wspominając już o domenie przestrzennej i obrazach, gdzie całka zamienia się w całkę podwójną). Znacznie
+prościej liczy sie splot w domenie częstotliwości:
+
+$$
+Y(\omega) = X(\omega) H(\omega)
+$$
+
+gdzie funkcje $Y(\omega)$, $X(\omega)$ oraz $H(\omega)$ to odpowiedniki funkcji czasu w dziedzinie częstotliwości.
+
+Jak zatem przekształcić ten zapis z dziedziny czasu na dziedzinę częstotliwości? Tutaj właśnie wykorzystywana jest
+transformacja Fouriera określona wzorem:
+
+$$
+\mathcal{F}\{f(t)\} = \int_{-\infty}^{\infty} f(t) e^{-j\omega t} \, dt
+$$
+
+gdzie $e^{-j\omega t}$ to nasza funkcja Eulera przytoczona we wcześniejszym podrozdziale a $f(t)$ to badany sygnał.
+Podstawy więc transformację do splotu w dziedzinie czasu:
+
+$$
+Y(\omega) = \mathcal{F} \left\{ \int_{-\infty}^{\infty} x(\tau) h(t - \tau) d\tau \right\}
+= \int_{-\infty}^{\infty} \left[ \int_{-\infty}^{\infty} x(\tau) h(t - \tau) d\tau \right] e^{-j\omega t} \, dt
+$$
+
+Mając takie dwie całki i zakładając, że sygnał spełnia warunki Dirichleta (w dużym skrócie jest bezwzględnie całkowalny)
+można zamienić kolejność całkowania:
+
+$$
+Y(\omega) = \int_{-\infty}^{\infty} x(\tau) \left[ \int_{-\infty}^{\infty} h(t - \tau) e^{-j\omega t} \, dt \right] d\tau
+$$
+
+Skupmy się na tej wewnętrznej całce. Zmienną jest tam $t$. Zróbmy więc podstawienie, żeby pozbyć się $(t-\tau)$. Niech
+nowa zmienna $u=t-\tau$. Wtedy $t=u+\tau$ (bo $\tau$ traktujemy jako stałą w tej wewnętrznej całce) oraz $dt = du$.
+Podstawiając otrzymujemy więc:
+
+$$
+\int_{-\infty}^{\infty} h(u) e^{-j\omega (u+\tau)} \, du
+$$
+
+Wykorzystując wcześniej przytoczoną właściwość potęg ($e^{a+b}=e^ae^b$) rozbijmy wykładnik:
+
+$$
+\int_{-\infty}^{\infty} h(u) e^{-j\omega u} e^{-j\omega \tau} \, du
+$$
+
+Biorąc pod uwagę fakt, że $e^{-j\omega \tau}$ nie zależy od $u$, możemy potraktowac go jako stałą ostatecznie otrzymując
+$H(\omega)$ jako odpowiedź impulsowa układu w dziedzinie częstotliwości:
+
+$$
+e^{-j\omega \tau} \int_{-\infty}^{\infty} h(u) e^{-j\omega u} \, du = e^{-j\omega \tau} H(\omega)
+$$
+
+Podstawmy więc $H(\omega)$ do pierwotnego równania $Y(\omega)$:
+
+$$
+Y(\omega) = \int_{-\infty}^{\infty} x(\tau) \cdot \left[ e^{-j\omega \tau} \cdot H(\omega) \right] d\tau
+$$
+
+Wówczas $H(\omega)$ jest stałą względem $\tau$, więc można przenieść ją przed całkę główną otrzymując ostatecznie
+równanie prostego mnożenia, co kończy dowód.
+
+$$
+Y(\omega) = H(\omega)\int_{-\infty}^{\infty} x(\tau) e^{-j\omega \tau} \, d\tau = H(\omega) X(\omega)
+$$
+
+## Związek między Fourierem a cewką w teorii obwodów
+
