@@ -9,8 +9,8 @@ tags: [matematyka, dsp, esp32]
 
 import { Callout } from 'nextra/components'
 
-Mój poprzedni wpis poświęcony był twardej inżynierii oprogramowania. W tym wpisie chciałbym wrócić nieco do korzeni i
-początków mojej studenckiej drogi, czyli do teorii obwodów, oraz pokazać, w jaki sposób wiąże się ona z dosyć
+Mój poprzedni wpis poświęcony był twardych zagadnień inżynierii oprogramowania. W tym wpisie chciałbym wrócić nieco do
+korzeni i początków mojej studenckiej drogi, czyli do teorii obwodów, oraz pokazać, w jaki sposób wiąże się ona z dosyć
 zaawansowanymi tematami analizy Fouriera, której dowody przedstawione w tym wpisie wykorzystałem w niedawno obronionej
 przeze mnie [pracy magisterskiej](https://github.com/milosz08/master-thesis), poświęconej nadpróbkowanej transformacji
 falkowej.
@@ -20,7 +20,7 @@ nieustalonych do metody symbolicznej opartej na liczbach zespolonych (słynne $j
 przydługawym) wpisie postaram się krok po kroku wytłumaczyć (opartego o wzór Eulera) moment tego przejścia oraz w jaki
 sposób przejście to wiąże się z teorią splotu analizy Fouriera.
 
-Pod koniec przedstawie *namacalne* wyniki wcześniej przedstawionych dywagacji teoretycznych z użyciem prostego
+Pod koniec przedstawię *namacalne* wyniki wcześniej przedstawionych dywagacji teoretycznych z użyciem prostego
 generatora sygnałów opartego o ESP32 i analizy widmowej.
 
 Tworzę ten wpis z nadzieją, że pomoże on, choć w minimalnym stopniu osobom zaczynającym swoją przygodę na studiach
@@ -315,7 +315,8 @@ Rolę generatora sygnałów DIY przejęło moje 30 pinowe ESP32 (dokładnie ESP-
 zasilane z USB-C. Z uwagi na zachowanie prostoty oprogramowania prototypów, wykorzystałem arduino IDE i driver do płytki
 ESP32. Wykorzystany oscyloskop to RIGOL DHO 804 (pasmo 70 MHz, 12-bitowy, próbkowanie 1.25 Gsa/s) z dwoma sondami x10.
 Sondy podłączone do wspólnej masy (GND), sonda żółta (CH1) podłączona do wyjścia DAC 25, sonda niebieska (CH2)
-podłączona do wyjścia DAC 26.
+podłączona do wyjścia DAC 26. Jako że DAC w ESP32 jest 8-bitowy, a oscyloskop ma przetwornik 12-bitowy, widoczne są
+czasami schodki na przebiegach, ale do dalszych prezentacji jest to zupełnie akceptowalne.
 
 ![station1](./img/station1.jpg)
 ![station2](./img/station2.jpg)
@@ -371,13 +372,22 @@ przesunięcie fazy o $90^\circ$ zmieniając liniowy ruch góra-dół w ruch obro
 
 ![exp1-phase-shift-xy](./img/exp1-phase-shift-xy.jpg)
 
-### Eksperyment 2: Splot w czasie to odcięcie harmonicznych w widmie
+### Eksperyment 2: Sumowanie w czasie to szereg Fouriera w widmie
 
 W tym eksperymencie zbudowany został programowo przebieg odkształcony. Zgodnie z teorią Fouriera, każdy okresowy sygnał
 niebędący sinusoidą jest w rzeczywistości sumą nieskończonej liczby sinusoid (harmonicznych). Więcej o tym znajdziesz w
 [innym moim wpisie](/podstawy-przetwarzania-i-analizy-częstotliwościowej-sygnału-audio).
 
-Poniższy kod na kanale DAC1 generuje idealnie czystą sinusoide 50Hz. Na kanale DAC2 wykonywany jest matematyczny *splot*
+Szczególnym pojęciem, jakie należy tutaj wprowadzić, jest liniowość transformacji Fouriera. Właściwość ta mówi, że widmo
+sumy sygnałów jest równe sumie ich widm i prezentuje się jako zależność:
+
+$$
+\mathcal{F}\left\{\sum_{n}a_nx_n(t)\right\}=\sum_{n}a_n X_n(\omega)
+$$
+
+Pokrótce oznacza to, że dodając w kodzie $n$-tą harmoniczną, nie wpływamy na sygnał podstawowy.
+
+Poniższy kod na kanale DAC1 generuje idealnie czystą sinusoidę 50Hz. Na kanale DAC2 realizowana jest superpozycja
 (sumowanie) w dziedzinie czasu: do podstawowej sinusoidy 50Hz dodawana jest trzecia harmoniczna ($3f$) o mniejszej
 amplitudzie.
 
@@ -400,7 +410,7 @@ void loop() {
   // kanał 1: podstawowy sin 50Hz
   float signal1 = 120.0 * sin(w_t);
 
-  // kanał 2: splot sygnału o mniejszej amplitudzie
+  // kanał 2: sumowanie sygnału o mniejszej amplitudzie z sygnałem podstawowym
   float signal2 = (100.0 * sin(w_t)) + (40.0 * sin(3.0 * w_t));
 
   // konwersja na zakres 0-255
@@ -416,11 +426,13 @@ void loop() {
 }
 ```
 
-Na poniższym rysunku widać w dziedzinie czasu czystą sinusoide 50Hz (żółty przebieg) oraz przebieg odkształcony (kolor
+Na poniższym rysunku widać w dziedzinie czasu czystą sinusoidę 50 Hz (żółty przebieg) oraz przebieg odkształcony (kolor
 niebieski). Operacja FFT wykonywana była dla amplitudy w skali liniowej (w celu czystego obrazu prążków) wraz z oknem
-Hanninga (przy oknie prostokątnym obserwowany był przeciek widma). Wykonując operację FFT na żółtym przebiegu widać
-jeden dominujący prążek w granicach 50Hz. Natomiast FFT na przebiegu odkształconym wykryte zostały dwa prążki: jeden
-podstawowy (około 50Hz) oraz drugi jako trzecia harmoniczna (około 156Hz, trzykrotność częstotliwości podstawowej).
+Hanninga. Analizując widmo żółtego przebiegu, widać jeden dominujący prążek w granicach 50 Hz. Natomiast w widmie
+przebiegu odkształconego (niebieskiego) wykryte zostały dwa prążki: jeden podstawowy (około 50 Hz) oraz drugi,
+odpowiadający trzeciej harmonicznej (około 156 Hz, co stanowi w przybliżeniu trzykrotność częstotliwości podstawowej).
+Potwierdza to liniowość transformacji Fouriera: dodawanie w czasie skutkuje pojawieniem się niezależnych prążków w
+widmie.
 
 ![exp2-fft](./img/exp2-fft.jpg)
 
