@@ -9,11 +9,11 @@ tags: [matematyka, dsp, esp32]
 
 import { Callout } from 'nextra/components'
 
-Mój poprzedni wpis poświęcony był twardych zagadnień inżynierii oprogramowania. W tym wpisie chciałbym wrócić nieco do
+Mój poprzedni wpis poświęcony był twardym zagadnieniom inżynierii oprogramowania. W tym wpisie chciałbym wrócić nieco do
 korzeni i początków mojej studenckiej drogi, czyli do teorii obwodów, oraz pokazać, w jaki sposób wiąże się ona z dosyć
-zaawansowanymi tematami analizy Fouriera, której dowody przedstawione w tym wpisie wykorzystałem w niedawno obronionej
-przeze mnie [pracy magisterskiej](https://github.com/milosz08/master-thesis), poświęconej nadpróbkowanej transformacji
-falkowej.
+zaawansowanymi tematami analizy Fouriera, której fundamenty teoretyczne, omawiane w tym wpisie, wykorzystałem w niedawno
+obronionej przeze mnie [pracy magisterskiej](https://github.com/milosz08/master-thesis), poświęconej nadpróbkowanej
+transformacji falkowej.
 
 Każdy, kto uczył się teorii obwodów, pamięta (albo nie pamięta) moment przejścia z równania różniczkowego dla stanów
 nieustalonych do metody symbolicznej opartej na liczbach zespolonych (słynne $j\omega$). W tym (możliwie, że dość
@@ -41,29 +41,29 @@ $$
 
 gdzie $u(t)$ oraz $i(t)$ to odpowiednio funkcje napięcia i prądu, zmieniające się w czasie $t$. Potraktujmy ten układ
 jako model układu dynamicznego. Jeśli wymusimy prąd sinusoidalny (a więc założony z początku prąd przemienny), dla
-którego $i(t)=\sin(\omega t)$, gdzie $\omega=2\pi f$, to zgodnie z regułami liczenia pochodnych otrzymamy:
+którego $i(t)=\cos(\omega t)$, gdzie $\omega=2\pi f$, to zgodnie z regułami liczenia pochodnych otrzymamy:
 
 $$
-u(t) = \omega L \cos(\omega t)
+u(t) = -\omega L\sin(\omega t)
 $$
 
-Otrzymaliśmy wynik matematycznie poprawny, ale jest on w cosinusie, a prąd chcemy mierzyć w sinusie. Żeby porównać te
-dwa sygnały (i tym samym zobaczyć przesunięcie fazy) trzeba zmienić cosinus z powrotem na sinus, z użyciem tożsamości
+Otrzymaliśmy wynik matematycznie poprawny, ale jest on w sinusie, a prąd chcemy mierzyć w cosinusie. Żeby porównać te
+dwa sygnały (i tym samym zobaczyć przesunięcie fazy) trzeba zmienić sinus z powrotem na cosinus, z użyciem tożsamości
 trygonometrycznej:
 
 $$
-\cos(x) = \sin\left(x + \frac{\pi}{2}\right)
+-\sin(x) = \cos\left(x + \frac{\pi}{2}\right)
 $$
 
 gdzie finalnie podstawiając, otrzymamy:
 
 $$
-u(t) = \omega L \sin\left(\omega t + \frac{\pi}{2}\right)
+u(t) = \omega L \cos\left(\omega t + \frac{\pi}{2}\right)
 $$
 
-Wygląda prosto, ale jest to prosty układ, posiadający jedynie jeden element reaktancyjny. Dla układu składającego się z
-wielu elementów pasywnych (rezystor, cewka, kondensator) sumowanie funkcji sinus i cosinus w dziedzinie czasu to dosyć
-skomplikowana i żmudna praca.
+Wygląda prosto, ale mimo wszystko jest to prosty układ, posiadający jedynie jeden element reaktancyjny. Dla układu
+składającego się z wielu elementów pasywnych (rezystor, cewka, kondensator) sumowanie funkcji sinus i cosinus w
+dziedzinie czasu to dosyć skomplikowana i żmudna praca.
 
 ### Przejście do świata liczb zespolonych
 
@@ -90,15 +90,11 @@ $$
 i(t)=\cos(\omega t)+j\sin(\omega t)=e^{j\omega t}
 $$
 
-Dociekliwi mogą zauważyć, że pierwotna funkcja $i(t)$ w przestrzeni liczb rzeczywistych posiadała w swojej podstawie
-sinus, a nie cosinus. Jest to jednak zależność wynikająca stricte z funkcji $e^{j \omega}$ oraz geometrii płaszczyzny
-liczb zespolonych zakładająca odgórnie, że podstawą części rzeczywistej liczby zespolonej jest cosinus a liczby urojonej
-sinus. W naszym przypadku to jednak nie gra roli, ponieważ korzystamy jedynie z jednej części liczby zespolonej (w tym
-przypadku urojonej).
-
-Zauważmy, że prąd $i(t)$ to tak naprawdę funkcja $e^{j\omega t}$. Cała idea tego podstawienia polega na wykorzystaniu
-funkcji Eulera przy liczeniu pochodnej. Jako że pochodna z funkcji $e^x$ to po prostu ta funkcja, upraszcza to
-drastycznie obliczenia:
+Zauważmy idealną zgodność: w metodzie symbolicznej sygnał fizyczny utożsamiamy z częścią rzeczywistą ($\mathfrak{Re}$)
+wirującego wektora. Skoro $e^{j\omega t}=\cos(\omega t)+j\sin(\omega t)$, to funkcja wymuszenia $i(t)=\cos(\omega t)$
+jest po prostu częścią rzeczywistą tego zapisu. Zauważmy również, że prąd $i(t)$ to tak naprawdę funkcja
+$e^{j\omega t}$. Cała idea tego podstawienia polega na wykorzystaniu funkcji Eulera przy liczeniu pochodnej. Jako że
+pochodna z funkcji $e^x$ to po prostu ta funkcja, upraszcza to drastycznie obliczenia:
 
 $$
 \frac{d}{dt}i(t)=\frac{d}{dt}\left(e^{j\omega t}\right)=j\omega e^{j\omega t}
@@ -125,7 +121,7 @@ temat wykraczający poza obszar tematyczny wyżej przedstawianego wywodu.
 
 ### Przejście na liczby rzeczywiste jako dowód tożsamości
 
-Wróćmy natomiast jeszcze do wzoru $u(t)=\omega L \sin\left(\omega t+\frac{\pi}{2}\right)$. Na pierwszy rzut oka wynik
+Wróćmy natomiast jeszcze do wzoru $u(t)=\omega L \cos\left(\omega t+\frac{\pi}{2}\right)$. Na pierwszy rzut oka wynik
 uzyskany metodą klasyczną oraz metodą symboliczną (mnożenie przez $j\omega$) mogą wydawać się różnymi opisami tego
 samego zjawiska. Mimo różnic w zapisie oba te wyniki są matematycznie tożsame, a mnożenie przez $j$ jest bezpośrednim
 odpowiednikiem przesunięcia fazy o kąt $\frac{\pi}{2}$. Kluczem do zrozumienia tego przekształcenia jest zależność:
@@ -147,12 +143,12 @@ u(t)=(\omega L)e^{j\left(\omega t+\frac{\pi}{2}\right)}
 $$
 
 gdzie otrzymane wyrażenie zespolone opisuje wirujący wektor. Aby odzyskać przebieg czasowy sygnału rzeczywistego,
-zgodnie z przyjętą wcześniej konwencją, trzeba wyciągnąć część urojoną $\mathfrak{Im}$, a ponieważ
-$\mathfrak{Im}\{e^{j\phi}\}=\sin(\phi)$, to wynikowo jest to po prostu sinus:
+zgodnie z przyjętą wcześniej konwencją, trzeba wyciągnąć część rzeczywistą, a ponieważ
+$\mathfrak{Re}\{e^{j\phi}\}=\cos(\phi)$, to wynikowo jest to po prostu cosinus:
 
 $$
-u_{\mathfrak{Re}}(t)=\mathfrak{Im}\left\{(\omega L)e^{j\left(\omega t+\frac{\pi}{2}\right)}\right\}
-=\omega L\sin\left(\omega t+\frac{\pi}{2}\right)
+u_{\mathfrak{Re}}(t)=\mathfrak{Re}\left\{(\omega L)e^{j\left(\omega t+\frac{\pi}{2}\right)}\right\}
+=\omega L\cos\left(\omega t+\frac{\pi}{2}\right)
 $$
 
 co dowodzi, że zarówno $u(t)$ uzyskane w wyniku klasycznej operacji różniczkowania w dziedzinie czasu, oraz część
@@ -199,7 +195,7 @@ $$
 $$
 
 gdzie $e^{-j\omega t}$ to nasza funkcja Eulera przytoczona we wcześniejszym podrozdziale a $f(t)$ to badany sygnał.
-Podstawy więc transformację do splotu w dziedzinie czasu:
+Podstawmy więc transformację do splotu w dziedzinie czasu:
 
 $$
 Y(\omega)=\mathcal{F}\left\{\int_{-\infty}^{\infty}x(\tau)h(t-\tau)d\tau\right\}
@@ -315,8 +311,11 @@ Rolę generatora sygnałów DIY przejęło moje 30 pinowe ESP32 (dokładnie ESP-
 zasilane z USB-C. Z uwagi na zachowanie prostoty oprogramowania prototypów, wykorzystałem arduino IDE i driver do płytki
 ESP32. Wykorzystany oscyloskop to RIGOL DHO 804 (pasmo 70 MHz, 12-bitowy, próbkowanie 1.25 Gsa/s) z dwoma sondami x10.
 Sondy podłączone do wspólnej masy (GND), sonda żółta (CH1) podłączona do wyjścia DAC 25, sonda niebieska (CH2)
-podłączona do wyjścia DAC 26. Jako że DAC w ESP32 jest 8-bitowy, a oscyloskop ma przetwornik 12-bitowy, widoczne są
-czasami schodki na przebiegach, ale do dalszych prezentacji jest to zupełnie akceptowalne.
+podłączona do wyjścia DAC 26.
+
+Dla uproszczenia sygnał z DAC jest podawany bezpośrednio na sondę. Zgodnie ze sztuką inżynierską należałoby użyć
+prostego filtra RC, aby wygładzić szum kwantyzacji wynikający z cyfrowej natury sygnału, jednak przy tak niskich
+częstotliwościach (50-200Hz) i przy tej rozdzielczości oscyloskopu efekt ten jest pomijalny dla poniższych eksperymentów.
 
 ![station1](./img/station1.jpg)
 ![station2](./img/station2.jpg)
@@ -499,7 +498,8 @@ void loop() {
 
 Analizując widmo FFT przedstawione na rysunku poniżej, zamiast jednego prążka widoczne są 3 (charakterystyczne właśnie
 dla modulacji AM). Środkowy prążek około 206 Hz to fala nośna, a symetrycznie po jej bokach widoczne są dwa nowe prążki
-(wstęgi boczne) oddalone o częstotliwość modulująca, około 20 Hz.
+(wstęgi boczne) oddalone o częstotliwość modulująca, około 20 Hz. Niewielkie różnice w odczytanych częstotliwościach
+(np. 206 Hz zamiast 200 Hz) wynikają ze skończonej rozdzielczości prążków FFT w oscyloskopie.
 
 ![exp3-am-modulation](./img/exp3-am-modulation.jpg)
 
