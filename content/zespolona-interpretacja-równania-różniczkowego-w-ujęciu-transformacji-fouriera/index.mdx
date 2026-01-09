@@ -335,10 +335,12 @@ const float freq_base = 50.0;  // 50Hz
 const float amplitude = 120.0; // amplituda, max rozdzielczość +-128 +-margines
 const float offset = 128.0;    // przesunięcie, żeby nie ucinało dołu
 
-void setup() {
+void setup()
+{
 }
 
-void loop() {
+void loop()
+{
   float t = micros() / 1000000.0;
 
   // w=2*pi*f
@@ -399,10 +401,12 @@ amplitudzie.
 const float freq_base = 50.0;
 const float offset = 128.0;
 
-void setup() {
+void setup()
+{
 }
 
-void loop() {
+void loop()
+{
   float t = micros() / 1000000.0;
   float w_t = 2.0 * PI * freq_base * t;
 
@@ -465,10 +469,12 @@ częstotliwość modulującą.
 const float freq_carrier = 200.0; // nośna
 const float freq_mod = 20.0;      // modulująca
 
-void setup() {
+void setup()
+{
 }
 
-void loop() {
+void loop()
+{
   float t = micros() / 1000000.0;
 
   // obliczenie faz
