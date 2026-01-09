@@ -436,8 +436,8 @@ widmie.
 ![exp2-fft](./img/exp2-fft.jpg)
 
 Co ciekawe, zachowane zostały proporcje amplitud zdefiniowane w kodzie. W programie stosunek amplitud wynosi 100:40,
-czyli 2.5. Pomiary oscyloskopowe pokazują 84.31 mVrms dla składowej podstawowej oraz 32.43 mVrms dla trzeciej
-harmonicznej. Stosunek ten wynosi $\frac{84.31}{32.43}\approx 2.6$, co potwierdza, że DAC w ESP32 zachowuje liniowość.
+czyli 2.5. Pomiary oscyloskopowe pokazują 855.6 mVrms dla składowej podstawowej oraz 329 mVrms dla trzeciej
+harmonicznej. Stosunek ten wynosi $\frac{mVrms}{329}\approx 2.6$, co potwierdza, że DAC w ESP32 zachowuje liniowość.
 
 ### Eksperyment 3: Mnożenie sygnałów (modulacja amplitudy)
 
@@ -497,15 +497,15 @@ void loop() {
 ```
 
 Analizując widmo FFT przedstawione na rysunku poniżej, zamiast jednego prążka widoczne są 3 (charakterystyczne właśnie
-dla modulacji AM). Środkowy prążek około 206 Hz to fala nośna, a symetrycznie po jej bokach widoczne są dwa nowe prążki
-(wstęgi boczne) oddalone o częstotliwość modulująca, około 20 Hz. Niewielkie różnice w odczytanych częstotliwościach
-(np. 206 Hz zamiast 200 Hz) wynikają ze skończonej rozdzielczości prążków FFT w oscyloskopie.
+dla modulacji AM). Środkowy prążek (200.2 Hz) to fala nośna, a symetrycznie po jej bokach widoczne są dwa nowe prążki
+(wstęgi boczne) oddalone o częstotliwość modulująca, około 20 Hz.
 
 ![exp3-am-modulation](./img/exp3-am-modulation.jpg)
 
 Zgodnie z teorią modulacji, amplituda wstęg bocznych powinna wynosić dokładnie połowę amplitudy fali nośnej. Podobnie
 jak dla wyników z poprzedniego eksperymentu, wartości amplitudy zachowują niemal idealne proporcje (amplituda fali
-nośnej: około 48 mVrms, amplitudy wstęg bocznych: około 24 mVrms).
+nośnej: około 512.8 mVrms, amplitudy wstęg bocznych: około 256.4 mVrms). Stosunek ten wynosi w dużym przybliżeniu 2.0,
+stanowiąc potwierdzenie wcześniej przytoczonej teorii.
 
 ## Podsumowanie
 
