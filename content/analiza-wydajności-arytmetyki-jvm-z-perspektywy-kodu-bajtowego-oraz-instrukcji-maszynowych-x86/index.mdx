@@ -1,0 +1,323 @@
+---
+title: Analiza wydajności arytmetyki JVM z perspektywy kodu bajtowego oraz instrukcji maszynowych x86
+date: 2026-01-25
+description: |
+  Studium przypadku weryfikujące mechanizmy "strength reduction" w maszynie wirtualnej HotSpot. Analiza obejmująca
+  transformację arytmetyki kodu bajtowego na natywne przesunięcia bitowe oraz operacje logiczne procesora x86.
+tags: [programowanie, optymalizacja]
+---
+
+import { Callout } from 'nextra/components'
+
+W tym wpisie chciałbym przyjrzeć się bliżej wykorzystaniu niskopoziomowych operacji bitowych w wysokopoziomowym świecie
+Javy. Inspiracją do podjęcia tego tematu stały się dla mnie archiwalne nagrania z 2011 roku, na których Markus "Notch"
+Persson tworzył grę *Minicraft* w ramach konkursu *Ludum Dare*.
+
+<Callout>
+  Dla zainteresowanych, nagrania z transmisji live dostępne są na YouTube, pod
+  [tym linkiem](https://www.youtube.com/playlist?list=PLgAujBKarXXoMxJDyi1Am4yvfbHYWRwOC).
+</Callout>
+
+Analizując jego pracę, zwróciłem uwagę na specyficzny styl kodowania: zamiast mnożyć współrzędne przez 32, Notch pisał
+`x << 5`, a zamiast klasycznego modulo, sięgał po operator `&`. Na pierwszy rzut oka wydaje się to logiczne, tj.
+instrukcje bliższe procesorowi powinny być szybsze (co notabene ma niemałe znaczenie przy renderowaniu grafiki i
+operacjach na *sprite sheetach*). Jednak czy dzisiaj, w erze dojrzałej Javy i agresywnych optymalizacji kompilatorów JIT
+(Just-In-Time), takie "hacki" mają jeszcze rację bytu? Czy ręczna optymalizacja faktycznie pomaga maszynie, czy jedynie
+zaciemnia kod przed człowiekiem? Na te pytania chciałbym odpowiedzieć w tym wpisie, schodząc warstwa po warstwie: od
+kodu źródłowego, przez kod bajtowy, aż po natywny ASM x86.
+
+Wszystkie testy zostały wykonane z wykorzystaniem maszyny wirtualnej OpenJDK 17.0.14 (OpenLogic-OpenJDK build 17.0.14+7)
+na procesorze Intel 10 generacji. Do ekstrakcji kodu maszynowego wykorzystałem plugin hsdis (HotSpot disassembly
+plugin), dostępny do pobrania [pod tym linkiem](https://chriswhocodes.com/hsdis/).
+
+## Szybkie przypomnienie: arytmetyka kontra logika bitowa
+
+Zanim będziemy zaglądać do wnętrza kodu bajtowego i instrukcji x86, krótkie przypomnienie zależności między matematyką a
+układem binarnym, które wykorzystują procesory.
+
+### Przesunięcie bitowe (mnożenie)
+
+Zacznijmy najpierw od przypomnienia, czym jest w ogóle przesunięcie bitowe. Załóżmy, że mam ciąg bitów `10110011`.
+Przesunięcie bitowe to nic innego jak przesunięcie całej wartości w którąś ze stron. Wyróżniamy przesunięcie w lewo oraz
+prawo. Tutaj skupię się jedynie na przesunięciu w lewo, ponieważ ono odpowiada za mnożenie. Poniżej widać pojedyncze
+przesunięcie bitowe w lewo dla liczby `10110011` (179), odpowiadające mnożeniu przez 2:
+
+```console
+Operacja: 179 << 1 (mnożenie przez 2)
+
+Dane wejściowe:   1 0 1 1 0 0 1 1    (179)
+                 / / / / / / / /
+Wynik:          1 0 1 1 0 0 1 1 0    (358)
+```
+
+Każda jedynka przesunęła się na pozycję o dwukrotnie wyższej wadze, dlatego matematycznie $179\cdot 2=358$. Gdybyśmy
+przesunęli o 5 pozycji (`<< 5`), wówczas pomnożylibyśmy liczbę przez $2^5$, a więc 32.
+
+### Koniunkcja bitowa (maskowanie)
+
+Koniunkcja bitowa (AND) działa jak sito. Przepuszcza jedynki tylko tam, gdzie w obu liczbach są jedynki. Dzięki tej
+zależności jest wręcz idealne do "wycinania" interesującej nas części liczby (np. reszty z dzielenia). Załóżmy, że
+chcemy obliczyć `179 % 16`. W świecie bitów 16 to potęga 2 więc możemy użyć maski 15 (`00001111`), aby zachować tylko
+ostatnie 4 bity:
+
+```console
+Operacja 179 % 16
+
+Liczba (179):    1 0 1 1 0 0 1 1
+Maska (15):      0 0 0 0 1 1 1 1
+Wynik (3):       0 0 0 0 0 0 1 1
+```
+
+Maska `00001111` wyzerowała wszystko, co było na początku liczby (pozbyła się wielokrotności 16) a zostawiła tylko
+końcówkę `0011`, a więc dopełnienie dzielenia równe 3. Matematycznie $179\bmod 16=3$.
+
+## Przypadek testowy nr 1: mnożenie
+
+Zacznijmy od najczęstszego przypadku: mnożenie przez potęgę dwójki. Stwórzmy więc prosty test porównujący czytelne
+mnożenie z ręczną optymalizacją.
+
+### Poziom 1: Wysokopoziomowy kod Javy
+
+```java
+public static int multiplyBy16(int val) {
+    return val * 16;
+}
+
+public static int shiftLeft4(int val) {
+    return val << 4;
+}
+```
+
+### Poziom 2: Kod bajtowy
+
+Używając narzędzia `javap`, można zobaczyć, co wygenerował kompilator statyczny `javac`, odpowiednio dla obu metod:
+
+```console
+public static int multiplyBy16(int);
+  Code:
+     0: iload_0
+     1: bipush        16
+     3: imul          <- jawna instrukcja mnożenia
+     4: ireturn
+
+public static int shiftLeft4(int);
+  Code:
+     0: iload_0
+     1: iconst_4
+     2: ishl          <- jawna instrukcja przesunięcia
+     3: ireturn
+```
+
+Analizując kod bajtowy widać, że kompilator `javac` jest "leniwy". Nie optymalizuje kodu. W pliku `.class` te dwie
+metody są różne. Gdyby JVM była tylko prostym interpreterem kodu bajtowego, wersja z przesunięciem byłaby
+szybsza.
+
+### Poziom 3: Assembly (C2 JIT compiler)
+
+Uruchamiając kod z flagami `-XX:+UnlockDiagnosticVMOptions`, `-XX:+PrintAssembly` oraz `-XX:-TieredCompilation`
+(wyłączającą etapowe kompilowanie, tj. natychmiastowe użycie kompilatora C2) można zauważyć, jak wygląda kod dla dużej
+liczby wywołań.
+
+Kod fazy rozgrzewkowej:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        for (int i = 0; i < 100_000; i++) {
+            multiplyBy16(i);
+            shiftLeft4(i);
+        }
+    }
+    // ... metody statyczne testMultiply oraz testShift
+}
+```
+
+Pełna komenda diagnostyczna:
+
+```
+java -XX:+UnlockDiagnosticVMOptions \
+     -XX:+PrintAssembly \
+     -XX:CompileCommand='print,*Main.test*' \
+     -XX:CompileCommand='dontinline,*Main.test*' \
+     -XX:-TieredCompilation \
+     -Xbatch \
+     Main
+```
+
+Wynik ASM x86 (metoda `multiplyBy16`):
+
+```console
+0x0000000117a8db0c:    mov    %esi,%eax
+0x0000000117a8db0e:    shl    $0x4,%eax ;*imul {reexecute=0 ...}
+                                        ; - Main::multiplyBy16@3 (line 11)
+```
+
+Analizując powyższy kod ASM, widać instrukcję `shl $0x4,%eax` a więc shift left o 4 bity (czyli $2^4=16$). W komentarzu
+po prawej stronie (`;*imul`) JIT informuje, że w kodzie bajtowym w tym miejscu była instrukcja `imul` (mnożenia
+całkowitoliczbowego). Wniosek jest następujący: mimo że z początku w kodzie źródłowym oraz kodzie bajtowym instrukcja
+sprowadzała się do mnożenia (`* 16`, `imul`) ostatecznie procesor otrzymał zoptymalizowaną instrukcję `shl`.
+
+Wynik ASM x86 (metoda `shiftLeft4`):
+
+```console
+0x0000000117a95e8c:    mov    %esi,%eax
+0x0000000117a95e8e:    shl    $0x4,%eax ;*ishl {reexecute=0 ...}
+                                        ; - Main::shiftLeft4@2 (line 15)
+```
+
+Jak można zauważyć, kod ASM dla metody z przesunięciem jest taki sam jak dla poprzedniej metody używającej mnożenia
+całkowitoliczbowego (ta sama instrukcja `shl $0x4,%eax`). Dodatkowo komentarz `;*ishl` potwierdza, że w kodzie bajtowym
+była instrukcja `ishl` (shift left).
+
+<Callout>
+  Warto jeszcze odnotować interesującą obserwację, która pojawiła się podczas przygotowywania tego testu. Gdy
+  uruchomiłem program z pojedynczym wywołaniem funkcji, w logach z ASM nie odnalazłem żadnego śladu moich metod.
+  Kompilacja kodu bajtowego do wysoce zoptymalizowanego asemblera jest procesem kosztownym (zabiera czas procesora),
+  dlatego dla kodu, który wykonuje się rzadko, maszyna wirtualna poprzestaje na pracy interpretera. Dopiero gdy licznik
+  wywołań przekroczy określony próg (zjawisko "rozgrzewania"), JIT uznaje metodę za "gorącą" (HotSpot) i generuje dla
+  niej kod natywny.
+</Callout>
+
+### Optymalizacja liczb o niebinarnym skalowaniu
+
+W powyższych przykładach założyliśmy, że liczba jest potęgą dwójki, a więc liczba o binarnym skalowaniu. A co jeśli
+mnożymy przez liczbę, która nie jest potęgą dwójki, np `x * 5`?. Można by założyć, że w tym wypadku JIT musi użyć
+mnożenia. Okazuje się jednak, że kompilatory wyposażone są w znacznie inteligentniejsze mechanizmy. Weźmy na tapet taką
+funkcję:
+
+```java
+public static int multiplyBy5(int val) {
+    return val * 5;
+}
+```
+
+Jak już wiemy, analizowanie kodu bajtowego mija się z celem, bo skompiluje on to do instrukcji `imul`. Ciekawie
+natomiast prezentuje się zoptymalizowany kod ASM:
+
+```console
+0x00000001111e5b8c:    mov    %esi,%eax ; kopiuje argument 'x' do rejestru roboczego
+0x00000001111e5b8e:    shl    $0x2,%eax ; przesuwa w lewo o 2 bity (mnożenie przez 4)
+0x00000001111e5b91:    add    %esi,%eax ; dodaje oryginalny 'x' do wyniku
+```
+
+Co tutaj zaszło? Matematycznie, zamiast mnożyć `x * 5`, procesor policzył to w ten sposób:
+
+$$
+x\cdot 5=(x\cdot 4)+x \\
+x\cdot 5=(x<<2)+x
+$$
+
+Analizując instrukcję ASM, `shl $0x2` oblicza $4x$ a `add` dodaje $1x$, ostatecznie otrzymując $5x$. Co ciekawe, na
+niektórych architekturach procesorów (lub w innych wersjach JIT) ten sam kod może zostać zoptymalizowany do jeszcze
+bardziej skondensowanej, pojedynczej instrukcji LEA (Load Effective Address), która dla tego przykładu mogłaby wyglądać
+następująco:
+
+```console
+lea    eax, [rdi + rdi*4]
+```
+
+Mogłoby się wydawać, że jedna instrukcja (LEA) zawsze będzie szybsza niż dwie (`shl` + `add`). Jednak kompilator C2
+dokonuje wyboru na podstawie modelu kosztów konkretnego procesora. Istnieją dwa główne powody, dla których JIT mógł
+preferować rozbicie tej operacji: opóźnienie i dostępność jednostek wykonawczych. Nie chcę jednak zagłębiać tego tematu
+tutaj, bo jest on tak obszerny, że zasługuje na osobny wpis. Warto z tego natomiast zapamiętać, że kompilator tak czy
+inaczej, wybierze według niego najlepszą metodę optymalizacji dla danego procesora.
+
+## Przypadek testowy nr 2: modulo
+
+Przejdźmy teraz do operacji modulo (`%`), z wykorzystaniem zarówno jawnego wykorzystania tego operatora, jak i z
+wykorzystaniem maski bitowej (bazując na przykładach omawianych w poprzednim rozdziale).
+
+### Poziom 1: Wysokopoziomowy kod Javy
+
+```java
+public static int modulo16(int val) {
+    return val % 16;
+}
+
+public static int bitwiseAnd15(int val) {
+    return val & 15;
+}
+```
+
+### Poziom 2: Kod bajtowy
+
+```console
+  public static int modulo16(int);
+    Code:
+       0: iload_0
+       1: bipush        16
+       3: irem
+       4: ireturn
+
+  public static int bitwiseAnd15(int);
+    Code:
+       0: iload_0
+       1: bipush        15
+       3: iand
+       4: ireturn
+```
+
+Analizując kod bajtowy, widać wyraźnie instrukcję `irem` (integer remainder) oraz instrukcję `iand` (integer boolean
+AND). Podobnie jak dla przykładu z mnożeniem, w kodzie pośrednim nie doświadczymy optymalizacji.
+
+### Poziom 3: Assembly (C2 JIT compiler)
+
+Spójrzmy na sekcję ASM odnosząca się do metody `modulo16`:
+
+```console
+0x0000000102ed718c:    mov    %esi,%r10d        ; kopia zmiennej
+0x0000000102ed718f:    sar    $0x1f,%r10d       ; 1. sprawdź znak (przesunięcie arytmetyczne)
+0x0000000102ed7193:    shr    $0x1c,%r10d       ; 2. przygotuj maskę korekcyjną
+0x0000000102ed7197:    add    %esi,%r10d        ; 3. dodaj korektę do liczby
+0x0000000102ed719a:    and    $0xfffffff0,%r10d ; 4. wyrównaj do wielokrotności 16
+0x0000000102ed719e:    mov    %esi,%eax         ; 5. przywróć oryginał
+0x0000000102ed71a0:    sub    %r10d,%eax        ; 6. odejmij wyrównaną wartość (to daje resztę)
+```
+
+oraz do metody `bitwiseAnd15`:
+
+```console
+0x0000000102ed6d8c:    mov    %esi,%eax ; załaduj zmienną do rejestru
+0x0000000102ed6d8e:    and    $0xf,%eax ; wykonaj AND 15, koniec
+                                        ; ;*iand ...
+```
+
+Dla metody `bitwiseAnd15` (`& 15`) kod jest minimalistyczny. JIT generuje jedną, atomową instrukcję logiczną `and`. Dla
+metody `modulo16` natomiast wygenerował aż 6 kroków pośrednich (mimo tego, że i tak zrezygnował już z najwolniejszej
+instrukcji dzielenia `idiv`) w tym przesunięcia `sar`, `shr` i odejmowanie `sub`. Dzieje się tak dlatego, że operacja
+modulo przygotowana jest na obsługę znaku w kodzie U2 z jednoczesnym uniknięciem instrukcji skoku `jmp` i rozgałęziania
+kodu. W przypadku prostej koniunkcji bitowej takiej obsługi nie ma.
+
+W praktyce oznacza to, że ręczna optymalizacja przy użyciu operatora `&` znajduje uzasadnienie głównie w specyficznych
+scenariuszach, w których dzielnik jest potęgą dwójki i możemy zagwarantować, że liczby będą dodatnie. W pozostałych
+przypadkach, zwłaszcza w logice biznesowej wymagającej precyzji matematycznej dla liczb ujemnych, bezpieczniej jest
+pozostać przy klasycznym modulo.
+
+Warto przy tym pamiętać, że realny zysk wydajnościowy nie wynika tu wyłącznie z prostej arytmetyki liczby instrukcji (1
+kontra 6), ale przede wszystkim z architektury procesora. Sekwencja generowana dla modulo tworzy bowiem tzw. łańcuch
+zależności danych, gdzie każdy kolejny krok musi czekać na wynik poprzedniego, blokując tym samym wykonywanie kolejnych
+instrukcji. W przeciwieństwie do tego instrukcja AND jest operacją atomową wykonującą się w jednym cyklu zegara,
+natychmiast zwalniając zasoby obliczeniowe dla innych zadań.
+
+## Podsumowanie
+
+Analiza niskopoziomowego kodu ASM oraz kodu bajtowego JVM pozwala potwierdzić i obalić kilka mitów. Wnioski płynące z
+tego eksperymentu można zawrzec w kilku punktach:
+
+* W przypadku mnożenia przez potęgi dwójki (a nawet inne stałe jak 5 czy 33), ręczna optymalizacja kodu (zamiana `*` na
+  `<<`) jest zazwyczaj zbędna. Nowoczesny kompilator C2 potrafi w tym przypadku zastosować *strength reduction*,
+  generując instrukcje przesunięcia bitowego lub sprytną arytmetykę adresową (LEA). Pisanie `x * 16` jest bardziej
+  czytelne dla człowieka, a dla maszyny, tak czy inaczej, zostanie podany kod `x << 4`.
+* Kompilator JIT nie może automatycznie zamienić operacji modulo (`%`) na maskę bitową (`&`), nawet jeśli dzielnik jest
+  potęgą 2. Wynika to z różnic w traktowaniu liczb ujemnych w systemie U2. Aby zachować poprawność matematyczną, JIT
+  generuje sekwencję instrukcji "naprawczych", co jest znacznie kosztowniejsze niż pojedyncza instrukcja `and`.
+* Stosowanie masek bitowych zamiast modulo przynosi realny i znaczny zysk wydajnościowy. Należy jednak robić to
+  świadomie, a mianowicie tylko wtedy, gdy możemy zagwarantować, że operujemy na liczbach dodatnich i dzielnikach
+  będących potęgą 2.
+* Jeśli funkcja uruchamia się tylko raz lub kilka razy, działa ona w trybie interpretowanym (nie jest kompilowana do
+  ASM), co jest z natury wolne. W takim scenariuszu zysk z zamiany mnożenia na przesunięcie jest niezauważalny, ponieważ
+  przysłania go narzut samego interpretera.
+
+W przypadku jakichkolwiek spostrzeżeń zapraszam do dzielenia się nimi w komentarzach. Zachęcam również do samodzielnego
+zweryfikowania powyższych przykładów na własnych maszynach. Jak udowodnił ten wpis, działanie kompilatora JIT nie jest
+deterministyczne i zależy od specyficznych warunków uruchomieniowych.
