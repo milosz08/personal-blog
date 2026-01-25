@@ -50,7 +50,7 @@ Dane wejściowe:   1 0 1 1 0 0 1 1    (179)
 Wynik:          1 0 1 1 0 0 1 1 0    (358)
 ```
 
-Każda jedynka przesunęła się na pozycję o dwukrotnie wyższej wadze, dlatego matematycznie $179\cdot 2=358$. Gdybyśmy
+Każda jedynka przesunęła się na pozycję o dwukrotnie wyższej wadze, dlatego matematycznie $179\cdot 2 = 358$. Gdybyśmy
 przesunęli o 5 pozycji (`<< 5`), wówczas pomnożylibyśmy liczbę przez $2^5$, a więc 32.
 
 ### Koniunkcja bitowa (maskowanie)
@@ -69,7 +69,7 @@ Wynik (3):       0 0 0 0 0 0 1 1
 ```
 
 Maska `00001111` wyzerowała wszystko, co było na początku liczby (pozbyła się wielokrotności 16) a zostawiła tylko
-końcówkę `0011`, a więc dopełnienie dzielenia równe 3. Matematycznie $179\bmod 16=3$.
+końcówkę `0011`, a więc dopełnienie dzielenia równe 3. Matematycznie $179\bmod 16 = 3$.
 
 ## Przypadek testowy nr 1: mnożenie
 
@@ -110,7 +110,10 @@ public static int shiftLeft4(int);
 
 Analizując kod bajtowy widać, że kompilator `javac` jest "leniwy". Nie optymalizuje kodu. W pliku `.class` te dwie
 metody są różne. Gdyby JVM była tylko prostym interpreterem kodu bajtowego, wersja z przesunięciem byłaby
-szybsza.
+szybsza. Ktoś mógłby zapytać, czemu kompilator `javac` od razu nie optymalizuje kodu dla takich prostych operacji?
+Głównym powodem takiego zachowania, jest sama filozofia Javy: kod bajtowy ma być wiernym odwzorowaniem intencji
+programisty, a optymalizacja ma zachodzić w czasie rzeczywistym (JIT), ponieważ to JIT wie, na jakiej architekturze
+(x86, arm) kod faktycznie jest uruchamiany.
 
 ### Poziom 3: Assembly (C2 JIT compiler)
 
@@ -152,10 +155,10 @@ Wynik ASM x86 (metoda `multiplyBy16`):
                                         ; - Main::multiplyBy16@3 (line 11)
 ```
 
-Analizując powyższy kod ASM, widać instrukcję `shl $0x4,%eax` a więc shift left o 4 bity (czyli $2^4=16$). W komentarzu
-po prawej stronie (`;*imul`) JIT informuje, że w kodzie bajtowym w tym miejscu była instrukcja `imul` (mnożenia
-całkowitoliczbowego). Wniosek jest następujący: mimo że z początku w kodzie źródłowym oraz kodzie bajtowym instrukcja
-sprowadzała się do mnożenia (`* 16`, `imul`) ostatecznie procesor otrzymał zoptymalizowaną instrukcję `shl`.
+Analizując powyższy kod ASM, widać instrukcję `shl $0x4,%eax` a więc shift left o 4 bity (czyli $2^4 = 16$). W
+komentarzu po prawej stronie (`;*imul`) JIT informuje, że w kodzie bajtowym w tym miejscu była instrukcja `imul`
+(mnożenia całkowitoliczbowego). Wniosek jest następujący: mimo że z początku w kodzie źródłowym oraz kodzie bajtowym
+instrukcja sprowadzała się do mnożenia (`* 16`, `imul`) ostatecznie procesor otrzymał zoptymalizowaną instrukcję `shl`.
 
 Wynik ASM x86 (metoda `shiftLeft4`):
 
@@ -302,7 +305,7 @@ natychmiast zwalniając zasoby obliczeniowe dla innych zadań.
 ## Podsumowanie
 
 Analiza niskopoziomowego kodu ASM oraz kodu bajtowego JVM pozwala potwierdzić i obalić kilka mitów. Wnioski płynące z
-tego eksperymentu można zawrzec w kilku punktach:
+tego eksperymentu można zawrzeć w kilku punktach:
 
 * W przypadku mnożenia przez potęgi dwójki (a nawet inne stałe jak 5 czy 33), ręczna optymalizacja kodu (zamiana `*` na
   `<<`) jest zazwyczaj zbędna. Nowoczesny kompilator C2 potrafi w tym przypadku zastosować *strength reduction*,
@@ -311,12 +314,16 @@ tego eksperymentu można zawrzec w kilku punktach:
 * Kompilator JIT nie może automatycznie zamienić operacji modulo (`%`) na maskę bitową (`&`), nawet jeśli dzielnik jest
   potęgą 2. Wynika to z różnic w traktowaniu liczb ujemnych w systemie U2. Aby zachować poprawność matematyczną, JIT
   generuje sekwencję instrukcji "naprawczych", co jest znacznie kosztowniejsze niż pojedyncza instrukcja `and`.
-* Stosowanie masek bitowych zamiast modulo przynosi realny i znaczny zysk wydajnościowy. Należy jednak robić to
-  świadomie, a mianowicie tylko wtedy, gdy możemy zagwarantować, że operujemy na liczbach dodatnich i dzielnikach
-  będących potęgą 2.
+* Stosowanie masek bitowych zamiast modulo przynosi realny zysk wydajnościowy, wynikający z natury instrukcji
+  maszynowych. Zastąpienie sekwencji operacji arytmetycznych jedną atomową instrukcją logiczną `and` nie tylko redukuje
+  liczbę cykli, ale przede wszystkim zrywa łańcuch zależności danych, pozwalając na lepsze wykorzystanie przetwarzania
+  potokowego procesora. Należy jednak robić to świadomie, a mianowicie tylko wtedy, gdy możemy zagwarantować, że
+  operujemy na liczbach dodatnich i dzielnikach będących potęgą 2.
 * Jeśli funkcja uruchamia się tylko raz lub kilka razy, działa ona w trybie interpretowanym (nie jest kompilowana do
   ASM), co jest z natury wolne. W takim scenariuszu zysk z zamiany mnożenia na przesunięcie jest niezauważalny, ponieważ
-  przysłania go narzut samego interpretera.
+  przysłania go narzut samego interpretera. Ponadto ręczna optymalizacja ma zazwyczaj sens jedynie w "gorących pętlach"
+  (jak silniki gier czy przetwarzanie sygnałów), podczas gdy w zwykłym serwisie REST-owym może być przedwczesną i
+  niepotrzebną optymalizacją.
 
 W przypadku jakichkolwiek spostrzeżeń zapraszam do dzielenia się nimi w komentarzach. Zachęcam również do samodzielnego
 zweryfikowania powyższych przykładów na własnych maszynach. Jak udowodnił ten wpis, działanie kompilatora JIT nie jest
