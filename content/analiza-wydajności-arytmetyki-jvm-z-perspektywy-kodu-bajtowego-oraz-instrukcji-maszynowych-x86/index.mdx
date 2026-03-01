@@ -57,8 +57,8 @@ przesunęli o 5 pozycji (`<< 5`), wówczas pomnożylibyśmy liczbę przez $2^5$,
 
 Koniunkcja bitowa (AND) działa jak sito. Przepuszcza jedynki tylko tam, gdzie w obu liczbach są jedynki. Dzięki tej
 zależności jest wręcz idealne do "wycinania" interesującej nas części liczby (np. reszty z dzielenia). Załóżmy, że
-chcemy obliczyć `179 % 16`. W świecie bitów 16 to potęga 2 więc możemy użyć maski 15 (`00001111`), aby zachować tylko
-ostatnie 4 bity:
+chcemy obliczyć `179 % 16`. W świecie bitów 16 to potęga 2 więc możemy użyć maski 15 (dzielnik jest rzędu 16, więc maska
+$16-1 = 15$, binarnie `00001111`), aby zachować tylko ostatnie 4 bity:
 
 ```console
 Operacja 179 % 16

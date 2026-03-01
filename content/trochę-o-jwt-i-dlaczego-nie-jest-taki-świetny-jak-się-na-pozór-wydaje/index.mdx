@@ -118,7 +118,10 @@ JWT potrafi być naprawdę długi, podczas gdy *session id* to zazwyczaj krótki
 typu token może mieć setki, a nawet tysiące znaków, wynikające głównie z ilości danych w ładunku oraz użytej długości
 klucza do wygenerowania sygnatury. Ten duży ciąg znaków jest wysyłany z każdym zapytaniem do serwera, czy to w nagłówku
 `Authorization`, czy w ciasteczku, generując tym samym nadmierny ruch sieciowy, spowalniając komunikację zwłaszcza na
-urządzeniach mobilnych i IoT.
+urządzeniach mobilnych i IoT. Warto również pamiętać, że standardowe ciasteczka w przeglądarkach mają limit pojemności
+wynoszący około 4 KB. Jeśli nasz JWT w wyniku rozrostu ról, uprawnień i danych z IDP (Identity Providera) przekroczy ten
+rozmiar, przeglądarka albo go utnie, albo serwer odrzuci nasze zapytanie, rzucając trudnym do zdiagnozowania błędem HTTP
+431 *Request Header Fields Too Large*. W przypadku sesji (kilkadziesiąt bajtów) ten problem nigdy nie występuje.
 
 Jako że obraz i liczby wyrażają więcej niż tysiąc słów, wyobraźmy sobie scenariusz korporacyjny, gdzie JWT musi zawierać
 szyfrowanie asymetryczne RS256, listę ról i uprawnień oraz dane kontekstowe (id organizacji, dział, preferencje).
