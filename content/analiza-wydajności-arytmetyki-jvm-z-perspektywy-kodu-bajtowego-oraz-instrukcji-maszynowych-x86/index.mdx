@@ -110,7 +110,7 @@ public static int shiftLeft4(int);
 
 Analizując kod bajtowy widać, że kompilator `javac` jest "leniwy". Nie optymalizuje kodu. W pliku `.class` te dwie
 metody są różne. Gdyby JVM była tylko prostym interpreterem kodu bajtowego, wersja z przesunięciem byłaby
-szybsza. Ktoś mógłby zapytać, czemu kompilator `javac` od razu nie optymalizuje kodu dla takich prostych operacji?
+szybsza. Ktoś mógłby zapytać, dlaczego kompilator `javac` od razu nie optymalizuje kodu dla takich prostych operacji?
 Głównym powodem takiego zachowania, jest sama filozofia Javy: kod bajtowy ma być wiernym odwzorowaniem intencji
 programisty, a optymalizacja ma zachodzić w czasie rzeczywistym (JIT), ponieważ to JIT wie, na jakiej architekturze
 (x86, arm) kod faktycznie jest uruchamiany.
@@ -288,8 +288,8 @@ oraz do metody `bitwiseAnd15`:
 Dla metody `bitwiseAnd15` (`& 15`) kod jest minimalistyczny. JIT generuje jedną, atomową instrukcję logiczną `and`. Dla
 metody `modulo16` natomiast wygenerował aż 6 kroków pośrednich (mimo tego, że i tak zrezygnował już z najwolniejszej
 instrukcji dzielenia `idiv`) w tym przesunięcia `sar`, `shr` i odejmowanie `sub`. Dzieje się tak dlatego, że operacja
-modulo przygotowana jest na obsługę znaku w kodzie U2 z jednoczesnym uniknięciem instrukcji skoku `jmp` i rozgałęziania
-kodu. W przypadku prostej koniunkcji bitowej takiej obsługi nie ma.
+modulo przygotowana jest na obsługę znaku w systemie uzupełnień do dwóch (U2) z jednoczesnym uniknięciem instrukcji
+skoku `jmp` i rozgałęziania kodu. W przypadku prostej koniunkcji bitowej takiej obsługi nie ma.
 
 W praktyce oznacza to, że ręczna optymalizacja przy użyciu operatora `&` znajduje uzasadnienie głównie w specyficznych
 scenariuszach, w których dzielnik jest potęgą dwójki i możemy zagwarantować, że liczby będą dodatnie. W pozostałych

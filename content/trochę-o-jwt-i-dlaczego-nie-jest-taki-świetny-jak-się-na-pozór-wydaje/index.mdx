@@ -52,7 +52,7 @@ Więcej informacji o sposobie generowanie sygnatury można znaleźć w oficjalny
 [RFC7515](https://www.rfc-editor.org/rfc/rfc7515). Pełną specyfikację JWT wraz z dokładnym opisem technicznym można
 znaleźć w dokumencie [RFC7519](https://www.rfc-editor.org/rfc/rfc7519).
 
-## Dlaczego wszyscy to pokochali?
+## Dlaczego wszyscy tego używają?
 
 JWT nie wzięło się znikąd i ma swoje mocne strony, które sprawiły, że zyskało ogromną popularność. To właśnie one są
 często prezentowane w tutorialach jako *zabójcze cechy*:
@@ -108,9 +108,9 @@ subtelnego problemu. Ciasteczka `HttpOnly` są podatne na ataki CSRF, ale można
 tokenów CSRF oraz poprzez ustawienie dla ciasteczka atrybutu `SameSite`.
 
 I tutaj znowu zataczamy koło, ponieważ jak zaimplementujemy wszystkie te mechanizmy bezpieczeństwa, JWT zaczyna działać
-podobnie do sesji. Przeglądarka automatycznie wysyła cookie, serwer weryfikuje token w cookie. Zadajmy więc pytanie,
-*jaka jest więc różnica między session id a JWT w ciasteczku poza tym, że w JWT zajmuje dużo więcej bajtów*? Niewielka
-a komplikacji jak widać przybywa.
+podobnie do sesji. Przeglądarka automatycznie wysyła cookie, serwer weryfikuje token w cookie. Zadajmy zatem pytanie:
+*jaka jest właściwie różnica między session id a JWT w ciasteczku poza tym, że w JWT zajmuje dużo więcej bajtów*?
+Niewielka, a komplikacji, jak widać, przybywa.
 
 ## Problem nr 3: Rozmiar ma znaczenie (szczególnie w oprogramowaniu sieciowym na urządzenia mobilne)
 
@@ -231,6 +231,6 @@ bezpieczniejsza, prostsza w implementacji i łatwiejsza w utrzymaniu. Warto na k
 > Complexity is the worst enemy of security. Złożoność jest najgorszym wrogiem bezpieczeństwa.
 
 Bycie dobrym inżynierem nie polega na używaniu wszystkich nowinek technologicznych, ale na umiejętności doboru
-właściwego narzędzia do zadania. Myślę, że każdy zaczynający w branży (w tym i ja) na początku się na to łapał, lecz z
-czasem należy wyrobić w sobie pragmatyzm, szczególnie dla zagadnień takich jak bezpieczeństwo. Standardowo zapraszam do
-dyskusji i dzielenia się własnymi spostrzeżeniami w komentarzach.
+właściwego narzędzia do zadania. Myślę, że każdy zaczynający w branży (w tym i ja) na początku wpadał w tę pułapkę, lecz
+z czasem należy wyrobić w sobie pragmatyzm, szczególnie dla zagadnień takich jak bezpieczeństwo. Standardowo zapraszam
+do dyskusji i dzielenia się własnymi spostrzeżeniami w komentarzach.

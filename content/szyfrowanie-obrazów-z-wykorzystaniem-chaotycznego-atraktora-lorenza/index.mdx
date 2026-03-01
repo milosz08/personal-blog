@@ -38,7 +38,7 @@ kryptograficznych.
 
 ![lorenz-attractor](./img/lorenz-attractor.png)
 
-Atraktor Lorenza jest określany jako *dziwny* lub *osobliwy*. Oznacza ono, że obiekt ten ma strukturę fraktalną i
+Atraktor Lorenza jest określany jako *dziwny* lub *osobliwy*. Oznacza to, że obiekt ten ma strukturę fraktalną i
 niecałkowity (ułamkowy) wymiar. Jest to zatem obiekt bardziej złożony niż dwuwymiarowa powierzchnia, ale jednocześnie
 nie wypełnia w pełni trójwymiarowej przestrzeni. Jego struktura jest nieskończenie złożona w każdej skali, a trajektoria
 poruszająca się po nim wędruje bez końca, nigdy nie powracając do tego samego punktu ani nie przecinając własnej
@@ -134,7 +134,7 @@ wygląda następująco:
 ```
 
 Istotny w tym kodzie jest fragment, w którym odrzucane jest N pierwszych wyników obliczeń (zmienna `warmup_skip_count`)
-z uwagi na fakt dużej przewidywalności rezultatów a tym samym niebezpieczeństwo złamania klucza. Ilość wartości do
+z uwagi na fakt dużej przewidywalności rezultatów a tym samym niebezpieczeństwo złamania klucza. Liczba wartości do
 odrzucenia może być określona przez:
 
 * odwrotność maksymalnego wykładnika Lapunowa ($\frac{1}{\lambda_{\text{max}}}$), czyli czas Lapunowa pomnożonego przez
@@ -292,7 +292,7 @@ z założenia układ Lorenza jest deterministyczny i przy każdym kolejnym szyfr
 początkowe, żeby nie używać wiele razy tego samego klucza. Rozwiązaniem jest tutaj specjalna jawna i pseudolosowa
 wartość nonce dodawana do początkowych parametrów układu chaotycznego. Co istotne, wartość ta nigdy nie jest taka sama
 dla kolejnych szyfrowań. Kod realizujący mieszanie wartości nonce ze stanem początkowym systemu tworzącą liczby
-zmiennoprzecinkowe o dużej prezycji:
+zmiennoprzecinkowe o dużej precyzji:
 
 ```python
 import hashlib
@@ -432,7 +432,7 @@ I_decrypted_mag_spect = get_magnitude_spectrum(I_decrypted)
 
 Analizując wyniki szyfrowania testowego obrazu oraz widmo Fouriera, proces szyfrowania całkowicie zniszczył jakiekolwiek
 korelacje obrazu pierwotnego a jego energia jest równomiernie rozproszona po wszystkich częstotliwościach tworząc obraz
-o właściwościach statystycznych losowego szum (*encrypted fft2*).
+o właściwościach statystycznych losowego szumu (*encrypted fft2*).
 
 ![encrypt-decrypt-image](./img/encrypt-decrypt-image.png)
 
