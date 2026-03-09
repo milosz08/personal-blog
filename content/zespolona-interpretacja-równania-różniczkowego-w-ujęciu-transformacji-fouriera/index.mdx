@@ -223,7 +223,7 @@ $$
 \int_{-\infty}^{\infty}h(u)e^{-j\omega u}e^{-j\omega\tau}\,du
 $$
 
-Biorąc pod uwagę fakt, że $e^{-j\omega\tau}$ nie zależy od $u$, możemy potraktowac go jako stałą ostatecznie otrzymując
+Biorąc pod uwagę fakt, że $e^{-j\omega\tau}$ nie zależy od $u$, możemy potraktować go jako stałą ostatecznie otrzymując
 $H(\omega)$ jako odpowiedź impulsowa układu w dziedzinie częstotliwości:
 
 $$
@@ -256,7 +256,7 @@ $$
 u(t)=i(t)*h(t)
 $$
 
-Musimy jakość znaleźć wartość $h(t)$ a więc odpowiedź impulsową cewki z założeniem, że cewka różniczkuje. Tutaj właśnie
+Musimy jakoś znaleźć wartość $h(t)$ a więc odpowiedź impulsową cewki z założeniem, że cewka różniczkuje. Tutaj właśnie
 przydaje się delta Diraca $\delta(t)$ i jej właściwości:
 
 * tożsamości: $f(t)*\delta(t)=f(t)$,
@@ -505,7 +505,7 @@ void loop()
 
 Analizując widmo FFT przedstawione na rysunku poniżej, zamiast jednego prążka widoczne są 3 (charakterystyczne właśnie
 dla modulacji AM). Środkowy prążek (200.2 Hz) to fala nośna, a symetrycznie po jej bokach widoczne są dwa nowe prążki
-(wstęgi boczne) oddalone o częstotliwość modulująca, około 20 Hz.
+(wstęgi boczne) oddalone o częstotliwość modulującą, około 20 Hz.
 
 ![exp3-am-modulation](./img/exp3-am-modulation.jpg)
 
@@ -528,7 +528,7 @@ z przedstawionych rozważań można sprowadzić do trzech głównych zagadnień:
   częstotliwości. Zależność ta działa również w sposób odwrotny: mnożenie sygnałów w czasie (modulacja amplitudowa)
   skutkuje splotem ich widm.
 
-Mam nadzieję, że przedstawione dowody i symulacje, choć w minimalnym stopniu pomogą w głębszym zrozumieniu relacji
+Mam nadzieję, że przedstawione dowody i symulacje, choć w minimalnym stopniu, pomogą w głębszym zrozumieniu relacji
 między równaniami różniczkowymi, podstawami teorii obwodów a analizą widmową, stanowiąc fundament do dalszej pracy z
 cyfrowym przetwarzaniem sygnałów, której zgłębianie serdecznie zachęcam. Zainteresowanych zapraszam również do
 zapoznania się z moją [pracą magisterską](https://github.com/milosz08/master-thesis) przedstawiającą nieco bardziej

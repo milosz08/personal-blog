@@ -20,9 +20,9 @@ modelu OSI).
 
 ## Kanał transportu danych: protokoły TCP/UDP
 
-Projektując jakikolwiek protokół (czy to znany HTTP, FTP, czy protokół X) należy mieć na uwadzę, że pod maską zazwyczaj
+Projektując jakikolwiek protokół (czy to znany HTTP, FTP, czy protokół X) należy mieć na uwadze, że pod maską zazwyczaj
 korzysta on albo z protokołu TCP, albo z UDP, czyli z protokołu niższej warstwy. Wybierając protokół TCP albo UDP należy
-mieć świadomość sposóbu ich działania. TCP lepiej nada się do danych mniej dynamicznych, ale takich, które muszą zostać
+mieć świadomość sposobu ich działania. TCP lepiej nada się do danych mniej dynamicznych, ale takich, które muszą zostać
 dostarczone w całości. UDP z kolei lepiej nada się do np. przesyłania strumieniowego audio czy wideo z uwagi na zerowy
 narzut obliczeniowy związany z korekcją błędnych pakietów i ich retransmisją oraz brak 3-way-handshake jak ma to miejsce
 w protokole TCP. Poprawność również nie jest priorytetowa (podobnie jak w metodach kompresji; efektywniejsze będzie
@@ -49,7 +49,7 @@ Chcąc przesyłać każdą klatkę obrazu osobno napotkamy pierwszy problem. Kom
 danych HD będzie znacznie większa od maksymalnej pojemności pakietu UDP. Mamy w tym wypadku dwie opcje:
 
 * zmniejszyć jakość obrazu do tej znanej z początków YouTube (144p, 240p) i transmitować każdą klatkę w jednym pakiecie,
-* podzielić klatę na mniejsze segmenty i wprowadzić algorytm składania tych segmentów po stronie odbiorcy.
+* podzielić klatkę na mniejsze segmenty i wprowadzić algorytm składania tych segmentów po stronie odbiorcy.
 
 Rzecz jasna, opcja pierwsza jest kuriozalna i mało przewidywalna z uwagi na sposób działania algorytmów kompresji (obraz
 o małej dynamice będzie ważył mniej niż taki z większą ilością detali). Należy sobie odpowiedzieć na pytanie, co się
@@ -81,8 +81,8 @@ Liczba ta mieści się na 2 bajtach, także 4 bajty to w zupełności bezpieczny
 
 ## Szyfrowanie strumienia danych
 
-Wiedząc już jak będziemy fragmentaryzować dane i wysyłać je przez sieć, dodajmy do nich szyfrowanie. Znamy dwa główny
-typy szyfrowania: asymetryczne i symetryczne. Asymetryczne wykorzystuje pary kluczy: publiczny i prywatny. Sam proces
+Wiedząc już, jak będziemy fragmentować dane i wysyłać je przez sieć, dodajmy do nich szyfrowanie. Znamy dwa główny typy
+szyfrowania: asymetryczne i symetryczne. Asymetryczne wykorzystuje pary kluczy: publiczny i prywatny. Sam proces
 szyfrowania odbywa się z wykorzystaniem klucza publicznego a deszyfrowania z wykorzystaniem klucza prywatnego. Jest ono
 szeroko stosowane z uwagi na duże bezpieczeństwo, ale wprowadza dodatkowy narzut obliczeniowy co ma niemałe znaczenie w
 przypadku budowania systemów czasu rzeczywistego. Szyfrowanie symetryczne natomiast korzysta tylko z jednego klucza.
@@ -157,12 +157,12 @@ dopóki napływają klatki obrazu:
   imageDataS := ilość bajtów w klatce obrazu
   sgCount := ceil(imageDataS / rawDataS)
 
-  uprocessedDataS := imageDataS
+  unprocessedDataS := imageDataS
   sendBytes := 0
   chunkOffset := 0
   sgNum := 0
 
-  dopóki uprocessedDataS > rawDataS:
+  dopóki unprocessedDataS > rawDataS:
     datagram := [N - keyS]
     datagram += sgNum
     datagram += sgCount
@@ -178,26 +178,26 @@ dopóki napływają klatki obrazu:
 
     sendBytes += N
     chunkOffset += rawDataS
-    uprocessedDataS -= rawDataS
+    unprocessedDataS -= rawDataS
     sgNum += 1
 
-  jeśli uprocessedDataS > 0:
-    datagram := [uprocessedDataS + sgNumS + sgCountS]
+  jeśli unprocessedDataS > 0:
+    datagram := [unprocessedDataS + sgNumS + sgCountS]
     datagram += sgNum
     datagram += sgCount
 
     datagram += processingImage[chunkOffset o długość rawDataS]
     iv := wygeneruj losowy wektor inicjujący (IV)
 
-    encDatagram := [uprocessedDataS + sgNumS + sgCountS + keyS]
+    encDatagram := [unprocessedDataS + sgNumS + sgCountS + keyS]
     encDatagram += zaszyfrowany datagram z użyciem klucza AES o rozmiarze keyS
     encDatagram += iv
 
     wyślij utworzony encDatagram przez kanał UDP
 
-    sendBytes += uprocessedDataS + sgNumS + sgCountS + keyS
+    sendBytes += unprocessedDataS + sgNumS + sgCountS + keyS
     chunkOffset := 0
-    uprocessedDataS := 0
+    unprocessedDataS := 0
     sgNum := 0
 ```
 
@@ -260,7 +260,7 @@ dopóki wątek jest aktywny:
 
 Przedstawiony prosty protokół przesyłania obrazu w czasie rzeczywistym z wykorzystaniem datagramów może w mniejszym lub
 większym stopniu pokazać proces jego tworzenia od podstaw oraz uwidocznić obecność możliwych pułapek, na jakie można
-natrafić podczas jego projektowania. W tego typu systemach należy mieć na uwadzę, że każdy cykl zegara procesora jest na
+natrafić podczas jego projektowania. W tego typu systemach należy mieć na uwadze, że każdy cykl zegara procesora jest na
 wagę złota i żeby działał on bez opóźnień należy unikać zbędnych deklaracji obiektów na stercie, tworzenia dużych tablic
 a kopiowanie danych najlepiej realizować poprzez natywne funkcje. Projektując tego typu protokół można wysnuć pewne
 złote zasady:

@@ -51,7 +51,7 @@ Więcej informacji o sposobie generowanie sygnatury można znaleźć w oficjalny
 [RFC7515](https://www.rfc-editor.org/rfc/rfc7515). Pełną specyfikację JWT wraz z dokładnym opisem technicznym można
 znaleźć w dokumencie [RFC7519](https://www.rfc-editor.org/rfc/rfc7519).
 
-## Dlaczego wszyscy to pokochali?
+## Dlaczego wszyscy tego używają?
 
 JWT nie wzięło się znikąd i ma swoje mocne strony, które sprawiły, że zyskało ogromną popularność. To właśnie one są
 często prezentowane w tutorialach jako *zabójcze cechy*:
@@ -107,9 +107,9 @@ subtelnego problemu. Ciasteczka `HttpOnly` są podatne na ataki CSRF, ale można
 tokenów CSRF oraz poprzez ustawienie dla ciasteczka atrybutu `SameSite`.
 
 I tutaj znowu zataczamy koło, ponieważ jak zaimplementujemy wszystkie te mechanizmy bezpieczeństwa, JWT zaczyna działać
-podobnie do sesji. Przeglądarka automatycznie wysyła cookie, serwer weryfikuje token w cookie. Zadajmy więc pytanie,
-*jaka jest więc różnica między session id a JWT w ciasteczku poza tym, że w JWT zajmuje dużo więcej bajtów*? Niewielka
-a komplikacji jak widać przybywa.
+podobnie do sesji. Przeglądarka automatycznie wysyła cookie, serwer weryfikuje token w cookie. Zadajmy zatem pytanie:
+*jaka jest właściwie różnica między session id a JWT w ciasteczku poza tym, że w JWT zajmuje dużo więcej bajtów*?
+Niewielka, a komplikacji, jak widać, przybywa.
 
 ## Problem nr 3: Rozmiar ma znaczenie (szczególnie w oprogramowaniu sieciowym na urządzenia mobilne)
 
@@ -117,7 +117,10 @@ JWT potrafi być naprawdę długi, podczas gdy *session id* to zazwyczaj krótki
 typu token może mieć setki, a nawet tysiące znaków, wynikające głównie z ilości danych w ładunku oraz użytej długości
 klucza do wygenerowania sygnatury. Ten duży ciąg znaków jest wysyłany z każdym zapytaniem do serwera, czy to w nagłówku
 `Authorization`, czy w ciasteczku, generując tym samym nadmierny ruch sieciowy, spowalniając komunikację zwłaszcza na
-urządzeniach mobilnych i IoT.
+urządzeniach mobilnych i IoT. Warto również pamiętać, że standardowe ciasteczka w przeglądarkach mają limit pojemności
+wynoszący około 4 KB. Jeśli nasz JWT w wyniku rozrostu ról, uprawnień i danych z IDP (Identity Providera) przekroczy ten
+rozmiar, przeglądarka albo go utnie, albo serwer odrzuci nasze zapytanie, rzucając trudnym do zdiagnozowania błędem HTTP
+431 *Request Header Fields Too Large*. W przypadku sesji (kilkadziesiąt bajtów) ten problem nigdy nie występuje.
 
 Jako że obraz i liczby wyrażają więcej niż tysiąc słów, wyobraźmy sobie scenariusz korporacyjny, gdzie JWT musi zawierać
 szyfrowanie asymetryczne RS256, listę ról i uprawnień oraz dane kontekstowe (id organizacji, dział, preferencje).
@@ -230,6 +233,6 @@ bezpieczniejsza, prostsza w implementacji i łatwiejsza w utrzymaniu. Warto na k
 > Complexity is the worst enemy of security. Złożoność jest najgorszym wrogiem bezpieczeństwa.
 
 Bycie dobrym inżynierem nie polega na używaniu wszystkich nowinek technologicznych, ale na umiejętności doboru
-właściwego narzędzia do zadania. Myślę, że każdy zaczynający w branży (w tym i ja) na początku się na to łapał, lecz z
-czasem należy wyrobić w sobie pragmatyzm, szczególnie dla zagadnień takich jak bezpieczeństwo. Standardowo zapraszam do
-dyskusji i dzielenia się własnymi spostrzeżeniami w komentarzach.
+właściwego narzędzia do zadania. Myślę, że każdy zaczynający w branży (w tym i ja) na początku wpadał w tę pułapkę, lecz
+z czasem należy wyrobić w sobie pragmatyzm, szczególnie dla zagadnień takich jak bezpieczeństwo. Standardowo zapraszam
+do dyskusji i dzielenia się własnymi spostrzeżeniami w komentarzach.
