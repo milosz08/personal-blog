@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@giscus/react": "^3.1.0",
+    "@microsoft/clarity": "^1.0.2",
     "@next/third-parties": "^16.0.1",
     "latex": "^0.0.1",
     "next": "16.0.7",

@@ -54,6 +54,7 @@ jobs:
           NEXT_PUBLIC_ANALYTICS_REFERER: ${{ secrets.ANALYTICS_REFERER }}
           NEXT_PUBLIC_ANALYTICS_WEBPAGE_ID: ${{ secrets.ANALYTICS_WEBPAGE_ID }}
           NEXT_PUBLIC_GTM_ID: ${{ secrets.GTM_ID }}
+          NEXT_PUBLIC_CLARITY_PROJECT_ID: ${{ secrets.CLARITY_PROJECT_ID }}
 
       - name: Deploy to Vercel
         run: yarn run vercel:deploy
