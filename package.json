@@ -17,7 +17,7 @@
     "@microsoft/clarity": "^1.0.2",
     "@next/third-parties": "^16.0.1",
     "latex": "^0.0.1",
-    "next": "16.0.7",
+    "next": "16.2.11",
     "nextra": "^4.6.0",
     "nextra-theme-blog": "^4.6.0",
     "react": "19.2.0",
