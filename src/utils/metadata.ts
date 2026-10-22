@@ -26,6 +26,11 @@ const buildMetadata = ({
   return {
     title: title || defTitle,
     description: description || defDescription,
+    alternates: {
+      types: {
+        'application/rss+xml': `${selfRefer}/feed.xml`,
+      },
+    },
     openGraph: {
       title: title || defTitle,
       description: description || defDescription,
