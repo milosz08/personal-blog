@@ -1,7 +1,7 @@
 import { Link } from 'next-view-transitions';
 import { BlogMetadata } from 'nextra-theme-blog';
 import React from 'react';
-import { formatDate } from '../utils';
+import { formatDate } from '@/utils';
 
 type PostCardProps = {
   post: {
