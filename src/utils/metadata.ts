@@ -34,7 +34,7 @@ const buildMetadata = ({
     openGraph: {
       title: title || defTitle,
       description: description || defDescription,
-      locale: 'pl',
+      locale: 'pl_PL',
       images,
       url: selfRefer + urlSuffix,
       ...(type ? { type } : {}),
